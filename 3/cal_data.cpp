@@ -15,6 +15,7 @@ public:
 	int getday();
 	static bool IsLeapYear(int year);
 	static int GetMonthDay(int year, int month);
+	static int Year(int y);
 	cal_data operator+(int day);
 	int operator-(const cal_data &c);
 	cal_data& operator=(const cal_data& d);
@@ -75,6 +76,14 @@ int cal_data::GetMonthDay(int year, int month)
 
 }
 
+int cal_data::Year(int y)
+{
+	if (y % 4 == 0) { return 366; }
+	else { return 365; }
+}
+
+
+
 cal_data cal_data:: operator+(int day)
 {
 	try {
@@ -103,60 +112,34 @@ int cal_data::operator-(const cal_data &c)
 {
 	try {
 		if (year < c.year) {
-			throw "请检查输入";
+			throw "请检查输入,输入的第一个日期需要大于第二次输入的日期";
 		}
 		else {
-			int days = 0;	//天数计数器
-
-	//计算相差的年之间所有天数，即把从d1的那年到d2的前一年的所有年的天数累加
-			for (int i = c.year; i < year; i++)
-			{
-				if ((i % 4 == 0 && i % 100 != 0) || i % 400 == 0)
-					days += 366;
-				else
-					days += 365;
+			int i = 0, date1 = 0;
+			for (i = 1;i < year;i++) {//算出从1年到去年的日期和
+				date1 += Year(i);
 			}
-
-			//去掉d1那年已过的天数，即从一月到的d1.month的前一个月的天数和d1.day的和
-			for (int j = 1; j < c.month; j++)
-			{
-				if (j == 1 || j == 3 || j == 5 || j == 7 || j == 8 || j == 10 || j == 12)
-					days -= 31;
-				else if (j == 4 || j == 6 || j == 9 || j == 11)
-					days -= 30;
-				else if (j == 2)
-				{
-					if ((c.year % 4 == 0 && c.year % 100 != 0) || c.year % 400 == 0)
-						days -= 29;
-					else
-						days -= 28;
-				}
+			for (i = 1;i < month;i++) {//算出当年一月到前一个月份的所有日期
+				date1 += GetMonthDay(year, month);
 			}
-			days -= c.day;
+			date1 += day;//加上已经过去的日期
 
-			//加上d2那年已过的天数，同计算d1时相同
-			for (int k = 1; k < month; k++)
-			{
-				if (k == 1 || k == 3 || k == 5 || k == 7 || k == 8 || k == 10 || k == 12)
-					days += 31;
-				else if (k == 4 || k == 6 || k == 9 || k == 11)
-					days += 30;
-				else if (k == 2)
-				{
-					if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
-						days += 29;
-					else
-						days += 28;
-				}
-
+			int j = 0, date2 = 0;
+			for (j = 1;j < c.year;j++) {//算出从1年到去年的日期和
+				date2 += Year(j);
 			}
+			for (j = 1;j < c.month;j++) {//算出当年一月到前一个月份的所有日期
+				date2 += GetMonthDay(c.year, c.month);
+			}
+			date2 += c.day;//加上已经过去的日期
+			return abs(date2 - date1);
 		}
 	}
 	catch (const char* msg) {
 		cerr << msg << endl;
 	}
-	
-	
+
+
 }
 cal_data & cal_data::operator=(const cal_data & d)
 {
@@ -174,7 +157,7 @@ bool cal_data::operator==(const cal_data &c)
 }
 bool cal_data::operator!=(const cal_data &c)
 {
-	return (year != c.year) && (month != c.month) && (day != c.day);
+	return (year != c.year) || (month != c.month) || (day != c.day);
 }
 bool cal_data::operator>(const cal_data& c)
 {
@@ -229,12 +212,22 @@ bool cal_data::operator<(const cal_data& c)
 cal_data cal_data::operator++()
 {
 	*this = *this + 1;
-	//_day += 1;
+
 	return *this;
 }
 cal_data cal_data::operator--()
 {
-	return cal_data();
+	day -= 1;
+	if (day == 0) {
+		month -= 1;
+		day = GetMonthDay(year, month);
+		if (month == 0) {
+			day = 31;
+			month = 12;
+			year -= 1;
+		}
+	}
+	return *this;
 }
 ostream & operator<<(ostream &out, cal_data& c)
 {
@@ -246,7 +239,7 @@ istream & operator>>(istream &in, cal_data& c)
 	string s;
 	in >> s;
 	string str = "/";
-	string::size_type idx = s.find(str);//判断虚部正负 
+	string::size_type idx = s.find(str);
 	if (idx != string::npos) {
 		int pos = s.find("/");
 		int pos2 = s.rfind("/");//反向查找
@@ -255,14 +248,54 @@ istream & operator>>(istream &in, cal_data& c)
 		sTmp = s.substr(pos + 1, pos2 + 1);
 		c.month = atof(sTmp.c_str());
 		sTmp = s.substr(pos2 + 1, s.length());
-		c.month = atof(sTmp.c_str());
+		c.day = atof(sTmp.c_str());
 		return in;
 	}
-	cout << "ERROR";
+	else {
+		cout << "ERROR";
+		exit(0);
+	}
+
 }
 int main()
 {
+//	cal_data c1, c2, c3, c4, c5;
+//	while (1) {
+		//>>
+//		cout << "输入c1和c2,格式为yyyy/mm/dd" << endl;
+//		cin >> c1 >> c2;
+//		cout << "c1：" << c1 << "" << "c2:  " << c2 << endl;
+		//+		
+//		c3 = c1 + 5;
+		//<<
+//		cout << "c3 is" << c3 << endl;
+		//-erro
+//		int i = c1 - c2;
+//		cout << "c1,c2:" << i << endl;
+		//++,--
+//		++c1;--c2;
+//		cout << "++c1: " << c1 << "--c2: " << c2 << endl;
+//		cout << "输入c4c5" << endl;
+//		cin >> c4 >> c5;
+		//==
+//		if (c4 == c5) {
+//			cout << "c4==c5" << endl;
+//		}
+//		else if (c4 != c5) {
+			//!= 
+//			cout << "c4!=c5" << endl;
+//			if (c4 < c5) {
+				//<
+//				cout << "c4<c5" << endl;
+//			}
+//			else if (c4 > c5) {
+				//>
+//				cout << "c4>c5" << endl;
+//			}
+//		}
+//	}
 	return 0;
 }
+
 
 
