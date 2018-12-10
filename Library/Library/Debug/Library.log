@@ -1,0 +1,13 @@
+﻿  Blurays.cpp
+  Books.cpp
+  DVDs.cpp
+  item.cpp
+  ItemList.cpp
+  Magazines.cpp
+  Movies.cpp
+  MusicCDs.cpp
+  Person.cpp
+  test.cpp
+  正在生成代码...
+e:\desktop\library\library\itemlist.cpp(115): warning C4715: “itemList::Findbook”: 不是所有的控件路径都返回值
+  Library.vcxproj -> E:\Desktop\Library\Debug\Library.exe
